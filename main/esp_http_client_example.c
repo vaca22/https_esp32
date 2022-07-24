@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
+#include <cJSON.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_log.h"
@@ -368,18 +369,84 @@ static void https_with_url(void)
     }
     esp_http_client_cleanup(client);
 }
+static esp_err_t https_set_common_headers(esp_http_client_handle_t client) {
+    esp_http_client_set_header(client, "Content-Type", "application/json");
+    esp_http_client_set_header(client, "Device-Unique", "asdf");
+    esp_http_client_set_header(client, "product-type",
+                               "1158");  // Fixed, 设备型号
+    esp_http_client_set_header(client, "device-type",
+                               "1158");  // Fixed, 设备型号
+    // token
+    char token[65] = {0};
+    size_t out_len = sizeof(token);
+/*    if (low_nvs_read_str_value("lc", "token", token, &out_len)) {
+        esp_http_client_set_header(client, "token", token);
+        ESP_LOGI(TAG, "read token form nvs is: %s", token);
+    }*/
+    return ESP_OK;
+}
 
+#define HOST_NAME "https://youxuan.toycloud.com"
+
+#define TOYCLOUD_CACERTPEM \
+    "-----BEGIN CERTIFICATE-----\n\
+MIIEzTCCA7WgAwIBAgIRANBLb+XdW9Ih58dM9kaLMUYwDQYJKoZIhvcNAQELBQAw\n\
+fjELMAkGA1UEBhMCUEwxIjAgBgNVBAoTGVVuaXpldG8gVGVjaG5vbG9naWVzIFMu\n\
+QS4xJzAlBgNVBAsTHkNlcnR1bSBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eTEiMCAG\n\
+A1UEAxMZQ2VydHVtIFRydXN0ZWQgTmV0d29yayBDQTAeFw0xNDA5MTExMjAwMDBa\n\
+Fw0yNzA2MDkxMDQ2MzlaMIGDMQswCQYDVQQGEwJQTDEiMCAGA1UEChMZVW5pemV0\n\
+byBUZWNobm9sb2dpZXMgUy5BLjEnMCUGA1UECxMeQ2VydHVtIENlcnRpZmljYXRp\n\
+b24gQXV0aG9yaXR5MScwJQYDVQQDEx5DZXJ0dW0gR2xvYmFsIFNlcnZpY2VzIENB\n\
+IFNIQTIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDHhvLXeA4kyBVY\n\
+Dr12JusjW+/HPPWpBmWnSZC9gadbNXCD/GlHrGruRWrKn0YBasbonXi5FLRon717\n\
+aCCDt2+7URnJx4mLGt3X73yH3I+T+COuyTFOuLId68jYV4vfBm1N/N1/KohGr8+R\n\
+7eT4f4agfXVQ+gDZT3pGTywqc9IId4uHaFjW+mr5vVfu7WjL8A20jOawvlqV2K4/\n\
+qSrjPZsqHlzf46LHgbQEK1EjTPsFrfvAQxvGpHiEIAFsS+1d2xPIEJVIxvq+KyGb\n\
+W/0SJIj7/SfYo+ItvJ2a4/G2JfoPF9wTCC0N8U5I/KXxjYYXBcIE9pQ16T24T+dr\n\
+MfPG2mYtAgMBAAGjggE+MIIBOjAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBRU\n\
+md2b/+inDqMZnVu+QlffMPyPMjAfBgNVHSMEGDAWgBQIds3LB/8k9sXN7buQvOKE\n\
+N0Z19zAOBgNVHQ8BAf8EBAMCAQYwLwYDVR0fBCgwJjAkoCKgIIYeaHR0cDovL2Ny\n\
+bC5jZXJ0dW0ucGwvY3RuY2EuY3JsMGsGCCsGAQUFBwEBBF8wXTAoBggrBgEFBQcw\n\
+AYYcaHR0cDovL3N1YmNhLm9jc3AtY2VydHVtLmNvbTAxBggrBgEFBQcwAoYlaHR0\n\
+cDovL3JlcG9zaXRvcnkuY2VydHVtLnBsL2N0bmNhLmNlcjA5BgNVHSAEMjAwMC4G\n\
+BFUdIAAwJjAkBggrBgEFBQcCARYYaHR0cDovL3d3dy5jZXJ0dW0ucGwvQ1BTMA0G\n\
+CSqGSIb3DQEBCwUAA4IBAQDRhC+yVHfF/IFcNNKbkxX1aVsCZ0fa2t+MxyFcs7KO\n\
+qW1fGpOOycughOFnbM+lz4Y3gt5RaOFJTm7YVUZZ3751s5tv8nhXeXfrRIpQN7Cu\n\
++Nei457HlDxEUItPlkYnDbdDes/96T19cICd1TmIPekYRXiyuPW4Wgx6vykmk91x\n\
+LkJ0y74TzVtUofVF446qXvea95zNpzYCVMg+AOX3ZZyy9XfST6g4um+cw/Idv31d\n\
+bnJdBzMOgHH3uw2YMiZQgDqvNRE+wAs+PTFEIKHmBc/t1n3Shvg9e68M+5ZRM8bE\n\
+WGqgLqfreTgCsCQcv9MDYw9TFUbS17RdE6NtiPfszTky\n\
+-----END CERTIFICATE-----\n"
 static void https_with_hostname_path(void)
 {
     char output_buffer[MAX_HTTP_OUTPUT_BUFFER] = {0};
     esp_http_client_config_t config = {
-        .host = "www.vaca.vip",
-        .path = "/",
-        .transport_type = HTTP_TRANSPORT_OVER_SSL,
-        .event_handler = _http_event_handler,
-        .cert_pem = howsmyssl_com_root_cert_pem_start,
+            .host = "youxuan.toycloud.com",
+            .path = "/webapi/v2/device/register3",
+            .transport_type = HTTP_TRANSPORT_OVER_SSL,
+            .event_handler = _http_event_handler,
+            .cert_pem      = TOYCLOUD_CACERTPEM,
     };
     esp_http_client_handle_t client = esp_http_client_init(&config);
+    esp_err_t err;
+
+    cJSON *request_body;
+    request_body = cJSON_CreateObject();
+    cJSON_AddItemToObject(request_body, "device_id",
+                          cJSON_CreateString("asdf"));
+    cJSON_AddItemToObject(request_body, "connect_by_app",
+                          cJSON_CreateNumber(1));
+    cJSON_AddItemToObject(request_body, "sn",
+                          cJSON_CreateString("asdf"));
+    cJSON_AddItemToObject(request_body, "firmware",
+                          cJSON_CreateString("1.1"));
+    cJSON_AddItemToObject(request_body, "sub_product_type",
+                          cJSON_CreateString("M01"));  // Fixed
+    esp_http_client_set_method(client, HTTP_METHOD_POST);
+    https_set_common_headers(client);
+//    esp_http_client_set_post_field(
+//            client, cJSON_PrintUnformatted(request_body),
+//            strlen(cJSON_PrintUnformatted(request_body)));
 //    esp_err_t err = esp_http_client_perform(client);
 //
 //    if (err == ESP_OK) {
@@ -389,10 +456,31 @@ static void https_with_hostname_path(void)
 //    } else {
 //        ESP_LOGE(TAG, "Error perform http request %s", esp_err_to_name(err));
 //    }
+    err = esp_http_client_open(client, 0);
 
-
-    esp_http_client_set_method(client, HTTP_METHOD_GET);
-    esp_err_t err = esp_http_client_open(client, 0);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to open HTTP connection: %s", esp_err_to_name(err));
+    } else {
+        int wlen = esp_http_client_write(client, cJSON_PrintUnformatted(request_body), strlen(cJSON_PrintUnformatted(request_body)));
+        if (wlen < 0) {
+            ESP_LOGE(TAG, "Write failed");
+        }
+        int content_length = esp_http_client_fetch_headers(client);
+        if (content_length < 0) {
+            ESP_LOGE(TAG, "HTTP client fetch headers failed");
+        } else {
+            int data_read = esp_http_client_read_response(client, output_buffer, MAX_HTTP_OUTPUT_BUFFER);
+            if (data_read >= 0) {
+                ESP_LOGI(TAG, "HTTP POST Status = %d, content_length = %d",
+                         esp_http_client_get_status_code(client),
+                         esp_http_client_get_content_length(client));
+                ESP_LOG_BUFFER_HEX(TAG, output_buffer, strlen(output_buffer));
+            } else {
+                ESP_LOGE(TAG, "Failed to read response");
+            }
+        }
+    }
+  /*  esp_err_t err = esp_http_client_open(client, 0);
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "Failed to open HTTP connection: %s", esp_err_to_name(err));
     } else {
@@ -410,7 +498,7 @@ static void https_with_hostname_path(void)
                 ESP_LOGE(TAG, "Failed to read response");
             }
         }
-    }
+    }*/
     esp_http_client_close(client);
 
 //    if (err == ESP_OK) {
