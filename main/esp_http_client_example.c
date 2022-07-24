@@ -425,7 +425,7 @@ static void https_with_hostname_path(void)
             .path = "/webapi/v2/device/register3",
             .transport_type = HTTP_TRANSPORT_OVER_SSL,
             .event_handler = _http_event_handler,
-            .cert_pem      = TOYCLOUD_CACERTPEM,
+            .cert_pem      = howsmyssl_com_root_cert_pem_start,
     };
     esp_http_client_handle_t client = esp_http_client_init(&config);
     esp_err_t err;
