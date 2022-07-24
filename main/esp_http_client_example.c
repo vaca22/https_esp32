@@ -475,6 +475,7 @@ static void https_with_hostname_path(void)
                          esp_http_client_get_status_code(client),
                          esp_http_client_get_content_length(client));
                 ESP_LOG_BUFFER_HEX(TAG, output_buffer, strlen(output_buffer));
+                ESP_LOGE("gaga","%s",output_buffer);
             } else {
                 ESP_LOGE(TAG, "Failed to read response");
             }
